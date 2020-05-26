@@ -1,0 +1,43 @@
+import 'package:get_it/get_it.dart';
+import 'package:{{projectName}}/core/viewmodels/splash_view_model.dart';
+import 'package:{{projectName}}/core/viewmodels/main/dashboard_view_model.dart';
+import 'package:{{projectName}}/core/viewmodels/main/intro_view_model.dart';
+import 'package:{{projectName}}/helper/update_checker.dart';
+import 'package:{{projectName}}/services/analytics_service.dart';
+import 'package:{{projectName}}/services/api.dart';
+import 'package:{{projectName}}/services/appconfig_service.dart';
+import 'package:{{projectName}}/services/dialog_service.dart';
+import 'package:{{projectName}}/services/navigation_service.dart';
+import 'package:{{projectName}}/services/preference_service.dart';
+
+GetIt locator = GetIt();
+
+void setupLocator() {
+  locator.registerLazySingleton(() => API());
+  locator.registerLazySingleton(() => RemoteHelper());
+  locator.registerLazySingleton(() => AppConfigService());
+  locator.registerLazySingleton(() => UpdateChecker());
+  locator.registerLazySingleton(() => DialogService());
+  locator.registerLazySingleton(() => PreferenceService());
+  locator.registerLazySingleton(() => NavigationService());
+  locator.registerLazySingleton(() => AnalyticsService());
+
+  // Repository Services
+
+
+  // MAIN
+  //
+  locator.registerFactory(() => SplashViewModel());
+  locator.registerFactory(() => DashboardViewModel());
+  locator.registerFactory(() => IntroViewModel());
+
+
+  // DASHBOARD
+  //
+
+
+  // SHARED
+  //
+ 
+
+}

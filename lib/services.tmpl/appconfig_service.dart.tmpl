@@ -1,0 +1,177 @@
+
+import 'dart:convert';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:{{projectName}}/helper/logger.dart';
+
+import '../locator.dart';
+
+class RemoteHelper {
+  
+  final AppConfigService appConfigService = locator<AppConfigService>();
+  RemoteConfig remoteConfig;
+
+  Future<void> configure() async {
+    remoteConfig = await RemoteConfig.instance;
+    try {
+      await remoteConfig.fetch(expiration: Duration(seconds: 60));
+      await remoteConfig.activateFetched();
+      appConfigService.setConfig(getStringValue("app_config"));
+      Logger.d('Init RemoteConfig: SUCCESS');
+      Logger.d(appConfigService.config.toJson().toString());
+    } catch (e) {
+       throw e;
+    }
+  }
+
+  String getStringValue(String value) =>
+      remoteConfig.getString(value);
+  bool getBoolValue(String value) =>
+      remoteConfig.getBool(value);
+  int getIntValue(String value) =>
+      remoteConfig.getInt(value);
+  double getDoubleValue(String value) =>
+      remoteConfig.getDouble(value);
+
+}
+
+class AppConfigService  {
+  AppConfig _appConfig;
+
+  AppConfig get config {
+      return _appConfig;
+  }
+
+  setConfig(String value){
+      _appConfig = AppConfig.fromJson(jsonDecode(value));
+  }
+
+}
+
+class AppConfig {
+  String appName;
+  String baseApiUrl;
+  AppStoreLinks appStoreLinks;
+  AppLinks appLinks;
+  String oneSignalID;
+
+  AppConfig(
+      {this.appName,
+      this.baseApiUrl,
+      this.appStoreLinks,
+      this.appLinks,
+      this.oneSignalID,});
+
+  AppConfig.fromJson(Map<String, dynamic> json) {
+    appName = json['AppName'];
+    baseApiUrl = json['BaseApiUrl'];
+    appStoreLinks = json['AppStoreLinks'] != null
+        ? new AppStoreLinks.fromJson(json['AppStoreLinks'])
+        : null;
+    appLinks = json['AppLinks'] != null
+        ? new AppLinks.fromJson(json['AppLinks'])
+        : null;
+    oneSignalID = json['OneSignalID'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['AppName'] = this.appName;
+    data['BaseApiUrl'] = this.baseApiUrl;
+    if (this.appStoreLinks != null) {
+      data['AppStoreLinks'] = this.appStoreLinks.toJson();
+    }
+     if (this.appLinks != null) {
+      data['AppLinks'] = this.appLinks.toJson();
+    }
+    data['OneSignalID'] = this.oneSignalID;
+    return data;
+  }
+}
+
+class AppLinks {
+  String supportEmail;
+  String supportUrl;
+  String privacy;
+  String userAgreement;
+  String contactPhone;
+
+  AppLinks(
+      {this.supportEmail,
+      this.supportUrl,
+      this.privacy,
+      this.userAgreement,
+      this.contactPhone,});
+
+  AppLinks.fromJson(Map<String, dynamic> json) {
+    supportEmail = json['SupportEmail'];
+    supportUrl = json['SupportUrl'];
+    privacy = json['Privacy'];
+    userAgreement = json['UserAgreement'];
+    contactPhone = json['ContactPhone'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['SupportEmail'] = this.supportEmail;
+    data['SupportUrl'] = this.supportUrl;
+    data['Privacy'] = this.privacy;
+    data['UserAgreement'] = this.userAgreement;
+    data['ContactPhone'] = this.contactPhone;
+    return data;
+  }
+}
+
+class AppStoreLinks {
+  AppStoreLink androidStore;
+  AppStoreLink iosStore;
+
+  AppStoreLinks({this.androidStore, this.iosStore});
+
+  AppStoreLinks.fromJson(Map<String, dynamic> json) {
+    androidStore = json['AndroidStore'] != null
+        ? new AppStoreLink.fromJson(json['AndroidStore'])
+        : null;
+    iosStore = json['IosStore'] != null
+        ? new AppStoreLink.fromJson(json['IosStore'])
+        : null;
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    if (this.androidStore != null) {
+      data['AndroidStore'] = this.androidStore.toJson();
+    }
+    if (this.iosStore != null) {
+      data['IosStore'] = this.iosStore.toJson();
+    }
+    return data;
+  }
+}
+
+class AppStoreLink {
+  String url;
+  String appID;
+  String version;
+  String reviewUrl;
+  bool forceUpdate;
+
+  AppStoreLink({this.url, this.appID, this.version, this.reviewUrl});
+
+  AppStoreLink.fromJson(Map<String, dynamic> json) {
+    url = json['Url'];
+    appID = json['AppID'];
+    version = json['Version'];
+    reviewUrl = json['ReviewUrl'];
+    forceUpdate = json['ForceUpdate'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['Url'] = this.url;
+    data['AppID'] = this.appID;
+    data['Version'] = this.version;
+    data['ReviewUrl'] = this.reviewUrl;
+    data['ForceUpdate'] = this.forceUpdate;
+    return data;
+  }
+}

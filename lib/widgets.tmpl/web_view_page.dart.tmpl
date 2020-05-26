@@ -1,0 +1,65 @@
+import 'package:flutter/material.dart';
+import 'package:{{projectName}}/core/res/colors.dart';
+import 'package:{{projectName}}/core/res/styles.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+class WebViewDetailedPage extends StatefulWidget {
+
+  final String url;
+  final String title;
+  final String token;
+
+  WebViewDetailedPage(this.url, this.title,{this.token=""});
+
+  @override
+  _WebViewDetailedPageState createState() => _WebViewDetailedPageState();
+}
+
+class _WebViewDetailedPageState extends State<WebViewDetailedPage> {
+  bool isLoading = true;
+  WebViewController _controller;
+  _loadURL(String url,String token) {
+    Map<String, String> headers = new Map();
+     headers['Authorization'] = 'Bearer ' + token;
+    _controller.loadUrl(url,headers:headers);
+  }
+  @override
+  Widget build(BuildContext context) {
+    final webView = WebView(
+      initialUrl: widget.token==""? widget.url:"",
+      javascriptMode: JavascriptMode.unrestricted,
+       onWebViewCreated: (WebViewController webViewController) async {
+                  _controller = webViewController;
+                  if(widget.token!=""){
+                      await _loadURL(widget.url,widget.token);
+                  }
+                },
+      onPageFinished: (data){
+        setState(() {
+          isLoading = false;
+        });
+      },
+    );
+    return Scaffold(
+      appBar: PreferredSize(child: AppBar(
+        titleSpacing: 0,
+        leading: IconButton(icon: Icon(Icons.arrow_back_ios), onPressed: (){
+          Navigator.pop(context);
+        }),
+        elevation: 1,
+        title: new Text(widget.title, textScaleFactor: 1, style: AppTextStyle.appBarTitle,),
+      ), preferredSize: Size(double.infinity, 50)),
+        body:SafeArea(child: Column(
+          children: <Widget>[
+            isLoading ? Container(
+              height: 2,
+              child: LinearProgressIndicator(valueColor: AlwaysStoppedAnimation(AppColor.primary),),
+            ) : Container(),
+
+            Flexible(
+              child: webView
+            )
+          ],
+        )));
+  }
+}

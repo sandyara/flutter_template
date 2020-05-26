@@ -1,0 +1,60 @@
+import 'package:flutter/material.dart';
+import 'package:package_info/package_info.dart';
+import 'package:{{projectName}}/core/res/styles.dart';
+import 'package:{{projectName}}/helper/logger.dart';
+import 'package:{{projectName}}/locator.dart';
+import 'package:{{projectName}}/services/analytics_service.dart';
+import 'package:{{projectName}}/services/appconfig_service.dart';
+import 'dart:io';
+
+import 'package:url_launcher/url_launcher.dart';
+
+class UpdateChecker {
+  versionCheck(BuildContext context) async {
+    final PackageInfo info = await PackageInfo.fromPlatform();
+    final String currentVersion = info.version + "-" + info.buildNumber;
+
+    final AppConfig appConfig = locator<AppConfigService>().config;
+
+    final AppStoreLink appStore = Platform.isIOS
+        ? appConfig.appStoreLinks.iosStore
+        : appConfig.appStoreLinks.androidStore;
+
+    try {
+      if (appStore.version != currentVersion && appStore.forceUpdate) {
+        const String message =
+            "There is a newer version of App available. Please update to continue using the app!";
+
+        locator<AnalyticsService>().logScreenName("update_dialog");
+        locator<AnalyticsService>()
+            .logEvent("update_dialog", <String, dynamic>{'message': message});
+
+        await showDialog<String>(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(
+                "Update Required",
+                style: AppTextStyle.dialogButtonOutline,
+              ),
+              content:
+                  Text(message, style: AppTextStyle.body),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text(
+                    "UPDATE NOW",
+                    style: AppTextStyle.dialogButton,
+                  ),
+                  onPressed: () async => await launch(appStore.url),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (exception, stacktrace) {
+      Logger.e("Unable to check for version info", e: exception, s: stacktrace);
+    }
+  }
+}

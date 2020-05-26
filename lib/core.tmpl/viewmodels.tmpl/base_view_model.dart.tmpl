@@ -1,0 +1,29 @@
+import 'package:flutter/widgets.dart';
+import 'package:{{projectName}}/core/enums/viewstate.dart';
+import 'package:{{projectName}}/locator.dart';
+import 'package:{{projectName}}/services/api.dart';
+import 'package:{{projectName}}/services/navigation_service.dart';
+import 'package:{{projectName}}/services/preference_service.dart';
+
+class BaseViewModel extends ChangeNotifier {
+  ViewState _state = ViewState.Idle;
+
+  ViewState get state => _state;
+
+  void setState(ViewState viewState) {
+    _state = viewState;
+    notifyListeners();
+  }
+
+  final API _api = locator<API>();
+  final PreferenceService _preferenceService = locator<PreferenceService>();
+  final NavigationService _navigationService = locator<NavigationService>();
+
+  API get api => _api;
+
+  PreferenceService get preferenceService => _preferenceService;
+
+  NavigationService get navigationService => _navigationService;
+
+
+}

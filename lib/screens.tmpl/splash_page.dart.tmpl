@@ -1,0 +1,40 @@
+
+import 'package:flutter/cupertino.dart';
+import 'package:{{projectName}}/core/res/colors.dart';
+import 'package:{{projectName}}/core/res/images.dart';
+import 'package:{{projectName}}/core/viewmodels/splash_view_model.dart';
+import 'package:{{projectName}}/helper/update_checker.dart';
+import 'package:{{projectName}}/locator.dart';
+import 'package:{{projectName}}/router.dart';
+import 'package:{{projectName}}/screens/base_view.dart';
+import 'package:{{projectName}}/services/preference_service.dart';
+import 'package:{{projectName}}/widgets/splash_screen.dart';
+
+class SplashPage extends StatelessWidget {
+
+  final PreferenceService _preferenceService = locator<PreferenceService>();
+
+  @override
+  Widget build(BuildContext context) {
+    return BaseView<SplashViewModel>(
+        onModelReady: (viewModel) async {
+          try {
+            await locator<UpdateChecker>().versionCheck(context);
+          } catch (e) {
+            print(e);
+          }
+        },
+        builder: (context, viewModel, child) => _buildSplashScreen()
+    );
+  }
+
+  Widget _buildSplashScreen(){
+    return SplashScreen(
+      seconds: 4,
+      photoSize: 100,
+      backgroundColor: AppColor.primaryDark,
+      image: Image.asset(Images.appLogo),
+      navigateAfterSeconds: _preferenceService.isAuthenticated() == null ? Routes.introPage : Routes.dashboard,
+    );
+  }
+}

@@ -1,0 +1,29 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+class AnalyticsService {
+  final FirebaseAnalytics analytics = FirebaseAnalytics();
+  Future<void> setUserId(int userId) async{
+    analytics.setUserId(userId.toString());
+    Crashlytics.instance.setUserIdentifier(userId.toString());
+  }
+  Future<void> loglogin() async{
+        analytics.logLogin();
+  }
+  Future<void> logSignUp() async{
+        analytics.logSignUp(signUpMethod: "Mobile App");
+  }
+  Future<void> logEcommerce(String productName,double amount) async{
+    return analytics.logEcommercePurchase(coupon: productName,value: amount,currency: "USD");
+  }
+  
+  Future<void> logScreenName(String screenName) async =>
+    await analytics.setCurrentScreen(screenName: screenName);
+  
+  Future<void> logEvent(String name, Map<String, dynamic> parameters) async{
+    await analytics.logEvent(name: name, parameters: parameters);
+  }
+  void logAppOpen() {
+     analytics.logAppOpen();
+  }
+}

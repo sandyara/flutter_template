@@ -1,0 +1,17 @@
+import 'package:flutter/cupertino.dart';
+import 'package:{{projectName}}/core/viewmodels/main/dashboard_view_model.dart';
+import 'package:{{projectName}}/screens/base_view.dart';
+
+class DashboardPage extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return BaseView<DashboardViewModel>(
+        onModelReady: (viewModel) async {
+         
+        },
+        builder: (context, viewModel, child) => Container()
+    );
+  }
+
+}

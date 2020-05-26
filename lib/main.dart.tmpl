@@ -1,0 +1,218 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/observer.dart';
+import 'package:flutter/services.dart';
+import 'package:{{projectName}}/core/res/colors.dart';
+import 'package:{{projectName}}/core/res/styles.dart';
+import 'package:{{projectName}}/helper/dialog_manager.dart';
+import 'package:{{projectName}}/helper/logger.dart';
+import 'package:{{projectName}}/locator.dart';
+import 'package:{{projectName}}/router.dart';
+import 'package:{{projectName}}/services/appconfig_service.dart';
+import 'package:{{projectName}}/services/dialog_service.dart';
+import 'package:{{projectName}}/services/navigation_service.dart';
+import 'package:{{projectName}}/services/preference_service.dart';
+import 'package:provider/provider.dart';
+
+{{#withDriverTest}}
+import 'package:flutter_driver/driver_extension.dart';
+{{/withDriverTest}}
+{{#withPluginHook}}
+import 'dart:async';
+
+import 'package:flutter/services.dart';
+import 'package:{{pluginProjectName}}/{{pluginProjectName}}.dart';
+{{/withPluginHook}}
+
+//
+// Template by SandyAra - https://github.com/SandyAra
+// 
+//
+// ******************************************************************************** //
+//
+//  Before Running the Application be sure to configure Firebase Project using the following steps
+//
+//  * Create Firebase Project
+//
+//  * Add Google Configuration file for both Android(google-services.json) & iOS(GoogleService-Info.plist)
+//
+//  * Add AppConfig Object to Firebase Remote Config. Refer the following example 
+//  *
+//  * ParameterKey = app_config
+//  * Value = {
+//              "AppName": "{{projectName}}",
+//              "BaseApiUrl": "https://api.url/v1/",
+//              "OneSignalId": "",
+//              "AppStoreLinks": {
+//                "AndroidStore": {
+//                  "Url": "https://play.google.com/",
+//                  "AppID": "{{androidIdentifier}}",
+//                  "Version": "1.0.0-dev-1",
+//                  "ReviewUrl": "https://play.google.com/",
+//                  "ForceUpdate": false
+//                },
+//                "IosStore": {
+//                  "Url": "https://apps.apple.com/",
+//                  "AppID": "{{androidIdentifier}}",
+//                  "Version": "1.0.0-dev-1",
+//                  "ReviewUrl": "https://apps.apple.com/",
+//                  "ForceUpdate": false
+//                }
+//              },
+//              "AppLinks": {
+//                "SupportEmail": "support@{{projectName}}.com",
+//                "SupportUrl": "https://www.{{projectName}}.com/contactus",
+//                "Privacy": "https://www.{{projectName}}.com/privacy",
+//                "UserAgreement": "https://www.{{projectName}}.com/useragreement",
+//                "ContactPhone": "9876543210"
+//              }
+//            }
+//
+//
+// ******************************************************************************** //
+
+Future<Null> main() async {
+  configureLogger();
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    Logger.e(details.toString(), s: null);
+  };
+  setupLocator();
+  await locator<RemoteHelper>().configure();
+  await locator<PreferenceService>().init();
+
+  runZoned<Future<void>>(() async {
+    {{#withDriverTest}}
+      // Enable integration testing with the Flutter Driver extension.
+      // See https://flutter.dev/testing/ for more info.
+      enableFlutterDriverExtension();
+    {{/withDriverTest}}
+    runApp(MyApp());
+  },
+  onError:(Object obj, StackTrace stack) {
+    Logger.e("Zoned Error",e:obj,s:stack);
+  });
+
+}
+{{^withPluginHook}} 
+
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => new _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+
+  static FirebaseAnalytics analytics = FirebaseAnalytics();
+  final NavigationService navigationService = locator<NavigationService>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarColor: AppColor.primaryDark,
+        systemNavigationBarColor: AppColor.primaryDark,
+        systemNavigationBarIconBrightness: Brightness.light
+    ));
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+
+    return MultiProvider(
+      providers: [
+        Provider<AppConfig>(create:(context) =>  locator<AppConfigService>().config),
+      ],
+      child : MaterialApp(
+          title: '{{projectName}}',
+          theme: AppStyle.appTheme,
+          builder: _setupDialogManager,
+          initialRoute: "/",
+          debugShowCheckedModeBanner: false,
+          navigatorKey: navigationService.navigatorKey,
+          onGenerateRoute: (settings) => Router.generateRoute(settings),
+          navigatorObservers: [FirebaseAnalyticsObserver(analytics: analytics)],
+        ),
+    );
+  }
+
+  Widget _setupDialogManager(context, widget) {
+    return Navigator(
+      key: locator<DialogService>().dialogNavigationKey,
+      onGenerateRoute: (settings) => MaterialPageRoute(
+          builder: (context) {
+            final MediaQueryData data = MediaQuery.of(context);
+            return DialogManager(
+              child: MediaQuery(
+                data: data.copyWith(
+                    textScaleFactor: 1.0
+                ),
+                child: widget,
+              ),
+            );
+          }),
+    );
+  }
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+}
+{{/withPluginHook}}
+{{#withPluginHook}}
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String _platformVersion = 'Unknown';
+
+  @override
+  void initState() {
+    super.initState();
+    initPlatformState();
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    String platformVersion;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      platformVersion = await {{pluginDartClass}}.platformVersion;
+    } on PlatformException {
+      platformVersion = 'Failed to get platform version.';
+    }
+
+    // If the widget was removed from the tree while the asynchronous platform
+    // message was in flight, we want to discard the reply rather than calling
+    // setState to update our non-existent appearance.
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Plugin example app'),
+        ),
+        body: Center(
+          child: Text('Running on: $_platformVersion\n'),
+        ),
+      ),
+    );
+  }
+}
+{{/withPluginHook}}

@@ -1,0 +1,46 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class PreferenceService {
+  static const String bearerToken = "BEARERTOKEN";
+  static const String userName = "USERNAME";
+  static const String is_authed = "ISAUTHED";
+
+  SharedPreferences pref;
+
+  init() async {
+    pref = await SharedPreferences.getInstance();
+  }
+
+  setBearerToken(String value) {
+    pref.setString(bearerToken, value);
+    debugPrint("Bearer Token stored successfully");
+  }
+
+  setUserName(String value) async {
+    pref.setString(userName, value);
+    debugPrint("Name  stored successfully");
+  }
+
+  setAuthenticated(bool value) async {
+    pref.setBool(is_authed, value);
+    debugPrint("Is Authed stored successfully");
+  }
+
+  String getBearerToken() {
+    return pref.getString(bearerToken) ?? "";
+  }
+
+  String getName() {
+    return pref.getString(userName) ?? "";
+  }
+
+  bool isAuthenticated() {
+    return pref.getBool(is_authed) ?? null;
+  }
+
+  clearData() async {
+    pref.clear();
+  }
+
+}
