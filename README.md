@@ -1,2 +1,2 @@
-# flutter_custom_template
+# Flutter Provider Template
 Create Flutter Application with Provider State Mangement Architecture
